@@ -1,0 +1,52 @@
+import type { NextApiRequest, NextApiResponse } from 'next';
+import bcrypt from 'bcrypt';
+import connectDB from '../../../lib/mongodb';
+import User from '../../../models/User';
+
+type ResponseData = {
+  success: boolean;
+  data?: any;
+  error?: string;
+};
+
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse<ResponseData>
+) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ success: false, error: 'Method not allowed' });
+  }
+
+  try {
+    await connectDB();
+
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({ success: false, error: 'Email and password are required' });
+    }
+
+    const user = await User.findOne({ email: email.toLowerCase() });
+
+    if (!user) {
+      return res.status(401).json({ success: false, error: 'Invalid email or password' });
+    }
+
+    if (!user.isActive) {
+      return res.status(403).json({ success: false, error: 'Account is inactive' });
+    }
+
+    const isPasswordValid = await bcrypt.compare(password, user.password || '');
+
+    if (!isPasswordValid) {
+      return res.status(401).json({ success: false, error: 'Invalid email or password' });
+    }
+
+    const userResponse = user.toObject();
+    const { password: _, ...userWithoutPassword } = userResponse;
+
+    return res.status(200).json({ success: true, data: userWithoutPassword });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, error: error.message });
+  }
+}

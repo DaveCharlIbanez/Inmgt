@@ -36,7 +36,6 @@ export default async function handler(
   }
 }
 
-// GET profile settings for a user
 async function getProfileSettings(userId: string, res: NextApiResponse<ResponseData>) {
   try {
     const settings = await ProfileSettings.findOne({ userId }).populate('userId', 'email firstName lastName');
@@ -51,7 +50,6 @@ async function getProfileSettings(userId: string, res: NextApiResponse<ResponseD
   }
 }
 
-// POST - Create profile settings for a user
 async function createProfileSettings(userId: string, req: NextApiRequest, res: NextApiResponse<ResponseData>) {
   try {
     const settingsData = { userId, ...req.body };
@@ -72,7 +70,6 @@ async function createProfileSettings(userId: string, req: NextApiRequest, res: N
   }
 }
 
-// PUT - Update profile settings
 async function updateProfileSettings(userId: string, req: NextApiRequest, res: NextApiResponse<ResponseData>) {
   try {
     const settings = await ProfileSettings.findOneAndUpdate(

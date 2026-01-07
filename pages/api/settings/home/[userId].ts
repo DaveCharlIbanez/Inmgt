@@ -36,7 +36,6 @@ export default async function handler(
   }
 }
 
-// GET home settings for a user
 async function getHomeSettings(userId: string, res: NextApiResponse<ResponseData>) {
   try {
     const settings = await HomeSettings.findOne({ userId }).populate('userId', 'email firstName lastName');
@@ -51,7 +50,6 @@ async function getHomeSettings(userId: string, res: NextApiResponse<ResponseData
   }
 }
 
-// POST - Create home settings for a user
 async function createHomeSettings(userId: string, req: NextApiRequest, res: NextApiResponse<ResponseData>) {
   try {
     const settingsData = { userId, ...req.body };
@@ -72,7 +70,6 @@ async function createHomeSettings(userId: string, req: NextApiRequest, res: Next
   }
 }
 
-// PUT - Update home settings
 async function updateHomeSettings(userId: string, req: NextApiRequest, res: NextApiResponse<ResponseData>) {
   try {
     const settings = await HomeSettings.findOneAndUpdate(

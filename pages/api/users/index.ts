@@ -29,7 +29,6 @@ export default async function handler(
   }
 }
 
-// GET all users or filter by role
 async function getUsers(req: NextApiRequest, res: NextApiResponse<ResponseData>) {
   try {
     const { role } = req.query;
@@ -47,12 +46,10 @@ async function getUsers(req: NextApiRequest, res: NextApiResponse<ResponseData>)
   }
 }
 
-// POST - Create new user
 async function createUser(req: NextApiRequest, res: NextApiResponse<ResponseData>) {
   try {
     const { email, password: plainPassword, role, firstName, lastName, contactNumber } = req.body;
 
-    // Basic validation
     if (!email || !plainPassword || !role) {
       return res.status(400).json({ 
         success: false, 
@@ -60,7 +57,6 @@ async function createUser(req: NextApiRequest, res: NextApiResponse<ResponseData
       });
     }
 
-    // Check if user already exists
     const existingUser = await User.findOne({ email: email.toLowerCase() });
     if (existingUser) {
       return res.status(400).json({ 
@@ -69,7 +65,6 @@ async function createUser(req: NextApiRequest, res: NextApiResponse<ResponseData
       });
     }
 
-    // Hash the password
     const hashedPassword = await bcrypt.hash(plainPassword, 10);
 
     const user = await User.create({
@@ -81,7 +76,6 @@ async function createUser(req: NextApiRequest, res: NextApiResponse<ResponseData
       contactNumber,
     });
 
-    // Remove password from response
     const userResponse = user.toObject();
     const { password, ...userWithoutPassword } = userResponse;
 
