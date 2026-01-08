@@ -1,9 +1,31 @@
 import Link from "next/link";
-import {Search , MapPin , Stars, Bed, User , Wifi, Home, Settings, LayoutDashboard, House } from 'lucide-react';
-import React, { Profiler } from "react";
+import {Search , MapPin , Stars, Bed, User , Wifi, Home, Settings, LayoutDashboard, House, LogOut } from 'lucide-react';
+import React, { useEffect, useState } from "react";
+import { useRouter } from "next/router";
 
 
 export default function Homepage(){
+    const router = useRouter();
+    const [user, setUser] = useState<any>(null);
+
+    useEffect(() => {
+        // Check if user is logged in
+        const userData = localStorage.getItem("user");
+        if (!userData) {
+            router.push("/login");
+        } else {
+            setUser(JSON.parse(userData));
+        }
+    }, [router]);
+
+    const handleLogout = () => {
+        localStorage.removeItem("user");
+        router.push("/login");
+    };
+
+    if (!user) {
+        return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+    }
     const boardingHouses = [
         {
             id: 1,
@@ -34,10 +56,17 @@ export default function Homepage(){
     return(
         <div className = "flex min-h-screen bg-gray-100 text-black-500" >
             {/*sidebar*/}
-            <aside className="w-64 bg-blue-400 shadow-md ">
-                <LayoutDashboard className="mr-2"></LayoutDashboard>
-                <h2 className="text-xl font-bold p-4 border-b text-black-500">Dashboard</h2>
-                <nav className="p-4 space-y-2 ">
+            <aside className="w-64 bg-blue-400 shadow-md flex flex-col">
+                <div className="p-4 border-b">
+                    <div className="flex items-center">
+                        <LayoutDashboard className="mr-2 h-6 w-6"></LayoutDashboard>
+                        <h2 className="text-xl font-bold text-black-500">Dashboard</h2>
+                    </div>
+                    {user && (
+                        <p className="text-sm text-gray-700 mt-2">Welcome, {user.email}</p>
+                    )}
+                </div>
+                <nav className="p-4 space-y-2 flex-1">
                     <Link href="/client" className="flex items-center p-2 text-gray-700 hover:bg-blue-200 rounded text-black-500">                       
                         <Home className="mr-2"></Home>
                         <span>Home</span>
@@ -51,6 +80,15 @@ export default function Homepage(){
                         <span>Settings</span>
                     </Link>
                 </nav>
+                <div className="p-4 border-t">
+                    <button 
+                        onClick={handleLogout}
+                        className="flex items-center p-2 text-gray-700 hover:bg-red-200 rounded w-full transition-colors"
+                    >
+                        <LogOut className="mr-2"/>
+                        <span>Logout</span>
+                    </button>
+                </div>
             </aside>
 
             {/*Main Content*/}

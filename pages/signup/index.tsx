@@ -64,9 +64,9 @@ export default function SignupPage() {
         throw new Error(data.error || "Failed to create account");
       }
 
-      // Success - redirect to login or home page
-      alert("Account created successfully!");
-      router.push("/login"); // You can change this to wherever you want to redirect
+      // Success - redirect to login page
+      alert("Account created successfully! Please sign in.");
+      router.push("/login");
     } catch (err: any) {
       setError(err.message || "An error occurred during signup");
     } finally {
