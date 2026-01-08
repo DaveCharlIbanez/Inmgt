@@ -36,7 +36,6 @@ export default async function handler(
   }
 }
 
-// GET single user by ID
 async function getUser(id: string, res: NextApiResponse<ResponseData>) {
   try {
     const user = await User.findById(id).select('-password');
@@ -51,12 +50,10 @@ async function getUser(id: string, res: NextApiResponse<ResponseData>) {
   }
 }
 
-// PUT - Update user
 async function updateUser(id: string, req: NextApiRequest, res: NextApiResponse<ResponseData>) {
   try {
     const updates = req.body;
 
-    // Don't allow password updates through this endpoint
     delete updates.password;
 
     const user = await User.findByIdAndUpdate(
@@ -75,7 +72,6 @@ async function updateUser(id: string, req: NextApiRequest, res: NextApiResponse<
   }
 }
 
-// DELETE - Soft delete user (set isActive to false)
 async function deleteUser(id: string, res: NextApiResponse<ResponseData>) {
   try {
     const user = await User.findByIdAndUpdate(

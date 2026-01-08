@@ -22,54 +22,31 @@ export default async function handler(
 
     const { email, password } = req.body;
 
-    // Basic validation
     if (!email || !password) {
-      return res.status(400).json({ 
-        success: false, 
-        error: 'Email and password are required' 
-      });
+      return res.status(400).json({ success: false, error: 'Email and password are required' });
     }
 
-    // Find user by email
     const user = await User.findOne({ email: email.toLowerCase() });
-    
+
     if (!user) {
-      return res.status(401).json({ 
-        success: false, 
-        error: 'Invalid email or password' 
-      });
+      return res.status(401).json({ success: false, error: 'Invalid email or password' });
     }
 
-    // Check if user is active
     if (!user.isActive) {
-      return res.status(401).json({ 
-        success: false, 
-        error: 'Account is inactive' 
-      });
+      return res.status(403).json({ success: false, error: 'Account is inactive' });
     }
 
-    // Verify password
-    const isPasswordValid = await bcrypt.compare(password, user.password);
-    
+    const isPasswordValid = await bcrypt.compare(password, user.password || '');
+
     if (!isPasswordValid) {
-      return res.status(401).json({ 
-        success: false, 
-        error: 'Invalid email or password' 
-      });
+      return res.status(401).json({ success: false, error: 'Invalid email or password' });
     }
 
-    // Remove password from response
     const userResponse = user.toObject();
     const { password: _, ...userWithoutPassword } = userResponse;
 
-    return res.status(200).json({ 
-      success: true, 
-      data: userWithoutPassword 
-    });
+    return res.status(200).json({ success: true, data: userWithoutPassword });
   } catch (error: any) {
-    return res.status(500).json({ 
-      success: false, 
-      error: error.message 
-    });
+    return res.status(500).json({ success: false, error: error.message });
   }
 }
