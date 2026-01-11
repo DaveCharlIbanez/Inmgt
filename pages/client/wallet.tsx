@@ -18,9 +18,15 @@ export default function WalletPage() {
   const [loading, setLoading] = useState(true);
   const [balance, setBalance] = useState(0);
   const [txns, setTxns] = useState<Txn[]>([]);
-  const [topup, setTopup] = useState(500);
-  const [pay, setPay] = useState({ amount: 0, reference: "Rent" });
+  const [topup, setTopup] = useState("");
+  const [pay, setPay] = useState({ amount: "", reference: "Rent" });
+  const [notification, setNotification] = useState<{ type: "success" | "error"; message: string } | null>(null);
   const currency = new Intl.NumberFormat("en-PH", { style: "currency", currency: "PHP" });
+
+  const showNotification = (type: "success" | "error", message: string) => {
+    setNotification({ type, message });
+    setTimeout(() => setNotification(null), 3000);
+  };
 
   useEffect(() => {
     const userData = localStorage.getItem("user");
@@ -40,76 +46,154 @@ export default function WalletPage() {
       router.push("/login");
       return;
     }
-    const balKey = `wallet:bal:${userId}`;
-    const txnKey = `wallet:txns:${userId}`;
-    const bal = localStorage.getItem(balKey);
-    const t = localStorage.getItem(txnKey);
-    setBalance(bal ? Number(bal) : 0);
-    setTxns(t ? JSON.parse(t) : []);
-    setLoading(false);
+    
+    // Fetch wallet data from database
+    fetchWalletData(userId);
   }, [router]);
 
-  const persist = (nextBal: number, nextTxns: Txn[]) => {
-    const id = user?._id ?? user?.id;
-    // Only persist if we have a valid user id; still update state locally
-    if (id) {
-      localStorage.setItem(`wallet:bal:${id}`, String(nextBal));
-      localStorage.setItem(`wallet:txns:${id}`, JSON.stringify(nextTxns));
+  const fetchWalletData = async (userId: string) => {
+    try {
+      const res = await fetch(`/api/wallet/balance?userId=${userId}`);
+      if (res.ok) {
+        const data = await res.json();
+        console.log('Fetched wallet data:', data);
+        setBalance(data.balance);
+        setTxns(data.transactions);
+      } else {
+        console.error('Failed to fetch wallet data:', res.status, res.statusText);
+      }
+    } catch (error) {
+      console.error("Failed to fetch wallet data:", error);
+    } finally {
+      setLoading(false);
     }
+  };
+
+  const persist = async (nextBal: number, nextTxns: Txn[]) => {
+    const id = user?._id ?? user?.id;
+    if (!id) return;
+    
     setBalance(nextBal);
     setTxns(nextTxns);
   };
 
-  const createId = () => `TX-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
-
   const simulateProcessing = (id: string) => {
-    setTimeout(() => {
+    setTimeout(async () => {
       const success = Math.random() > 0.1; // 90% success
-      const next = txns.map<Txn>((t) => {
-        if (t.id === id) {
-          const newStatus: Txn["status"] = success ? "Success" : "Failed";
-          const updated: Txn = { ...t, status: newStatus };
-          return updated;
+      const userId = user?._id ?? user?.id;
+      
+      if (userId) {
+        try {
+          // Fetch current balance from database to avoid race conditions
+          const getRes = await fetch(`/api/wallet/balance?userId=${userId}`);
+          if (!getRes.ok) {
+            console.error('Failed to fetch current balance');
+            return;
+          }
+          const currentData = await getRes.json();
+          const currentBalance = currentData.balance;
+          
+          // Find the transaction and calculate new balance
+          const txn = currentData.transactions.find((t: Txn) => t.id === id);
+          if (!txn) {
+            console.error('Transaction not found');
+            return;
+          }
+          
+          let nextBal = currentBalance;
+          if (success) {
+            if (txn.type === "Top-up") nextBal += txn.amount;
+            if (txn.type === "Payment") nextBal -= txn.amount;
+          }
+          
+          console.log('Updating transaction:', { transactionId: id, status: success ? 'Success' : 'Failed', oldBalance: currentBalance, newBalance: nextBal });
+          
+          const res = await fetch(`/api/wallet/balance?userId=${userId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ transactionId: id, status: success ? 'Success' : 'Failed', balance: nextBal }),
+          });
+          
+          if (res.ok) {
+            const data = await res.json();
+            console.log('Updated wallet data:', data);
+            setBalance(data.balance);
+            setTxns(data.transactions);
+          } else {
+            console.error('Failed to update transaction - status:', res.status);
+          }
+        } catch (error) {
+          console.error("Failed to update transaction:", error);
         }
-        return t;
-      });
-      const txn = next.find((t) => t.id === id);
-      let nextBal = balance;
-      if (txn) {
-        if (txn.type === "Top-up" && success) nextBal += txn.amount;
-        if (txn.type === "Payment" && success) nextBal -= txn.amount;
       }
-      persist(nextBal, next);
     }, 1000 + Math.random() * 1000);
   };
 
-  const doTopup = () => {
-    if (topup <= 0) return alert("Enter a valid amount");
+  const createId = () => `TX-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
+
+  const doTopup = async () => {
+    const amount = typeof topup === "string" ? parseFloat(topup) : topup;
+    if (!amount || amount <= 0) return showNotification("error", "Enter a valid amount");
     const txn: Txn = {
       id: createId(),
       type: "Top-up",
-      amount: Math.round(topup * 100) / 100,
+      amount: Math.round(amount * 100) / 100,
       reference: "E-Wallet Top-up",
       status: "Processing",
       createdAt: new Date().toISOString(),
     };
-    persist(balance, [txn, ...txns]);
+    
+    // Save to database
+    const userId = user?._id ?? user?.id;
+    if (userId) {
+      try {
+        await fetch(`/api/wallet/balance?userId=${userId}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ transaction: txn }),
+        });
+      } catch (error) {
+        console.error("Failed to save transaction:", error);
+      }
+    }
+    
+    await persist(balance, [txn, ...txns]);
     simulateProcessing(txn.id);
+    setTopup("");
+    showNotification("success", "Top-up processing...");
   };
 
-  const doPay = () => {
-    if (pay.amount <= 0) return alert("Enter a valid amount");
-    if (pay.amount > balance) return alert("Insufficient balance. Top-up first.");
+  const doPay = async () => {
+    const amount = typeof pay.amount === "string" ? parseFloat(pay.amount) : pay.amount;
+    if (!amount || amount <= 0) return showNotification("error", "Enter a valid amount");
+    if (amount > balance) return showNotification("error", "Insufficient balance. Top-up first.");
     const txn: Txn = {
       id: createId(),
       type: "Payment",
-      amount: Math.round(pay.amount * 100) / 100,
+      amount: Math.round(amount * 100) / 100,
       reference: pay.reference || "Payment",
       status: "Processing",
       createdAt: new Date().toISOString(),
     };
-    persist(balance, [txn, ...txns]);
+    
+    // Save to database
+    const userId = user?._id ?? user?.id;
+    if (userId) {
+      try {
+        await fetch(`/api/wallet/balance?userId=${userId}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ transaction: txn }),
+        });
+      } catch (error) {
+        console.error("Failed to save transaction:", error);
+      }
+    }
+    
+    await persist(balance, [txn, ...txns]);
     simulateProcessing(txn.id);
+    setPay({ amount: "", reference: "Rent" });
+    showNotification("success", "Payment processing...");
   };
 
   const handleLogout = () => {
@@ -143,15 +227,16 @@ export default function WalletPage() {
             <h4 className="font-bold text-gray-800 mb-3 flex items-center gap-2"><PlusCircle className="text-green-600" /> Top-up</h4>
             <div className="flex gap-2 mb-3">
               {[200, 500, 1000].map((amt) => (
-                <button key={amt} onClick={() => setTopup(amt)} className="px-3 py-1 border border-gray-300 rounded hover:bg-gray-50 text-sm">{currency.format(amt)}</button>
+                <button key={amt} onClick={() => setTopup(amt)} className="px-3 py-1 border border-gray-300 rounded hover:bg-gray-50 text-sm text-gray-900">{currency.format(amt)}</button>
               ))}
             </div>
             <div className="flex gap-2">
               <input
                 type="number"
                 value={topup}
-                onChange={(e) => setTopup(Number(e.target.value))}
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+                onChange={(e) => setTopup(e.target.value)}
+                placeholder="0"
+                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 text-gray-900"
               />
               <button onClick={doTopup} className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium">Add</button>
             </div>
@@ -165,8 +250,9 @@ export default function WalletPage() {
                 <input
                   type="number"
                   value={pay.amount}
-                  onChange={(e) => setPay({ ...pay, amount: Number(e.target.value) })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+                  onChange={(e) => setPay({ ...pay, amount: e.target.value })}
+                  placeholder="0"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 text-gray-900"
                 />
               </div>
               <div>
@@ -174,7 +260,7 @@ export default function WalletPage() {
                 <input
                   value={pay.reference}
                   onChange={(e) => setPay({ ...pay, reference: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 text-gray-900"
                 />
               </div>
               <button onClick={doPay} className="w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium">Pay Now</button>
@@ -195,7 +281,7 @@ export default function WalletPage() {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <div className={`px-2 py-1 rounded text-xs font-semibold ${t.type === "Top-up" ? "bg-green-100 text-green-800" : "bg-blue-100 text-blue-800"}`}>{t.type}</div>
-                      <div className="text-lg font-bold">{currency.format(t.amount)}</div>
+                      <div className="text-lg font-bold text-gray-900">{currency.format(t.amount)}</div>
                       <div className="text-sm text-gray-500">{t.reference}</div>
                     </div>
                     <div className="flex items-center gap-3">
@@ -211,6 +297,26 @@ export default function WalletPage() {
           )}
         </div>
       </div>
+
+      {/* Toast Notification */}
+      {notification && (
+        <div className="fixed bottom-6 right-6 z-50 animate-slide-in">
+          <div
+            className={`px-6 py-4 rounded-lg shadow-lg flex items-center gap-3 ${
+              notification.type === "success"
+                ? "bg-green-600 text-white"
+                : "bg-red-600 text-white"
+            }`}
+          >
+            {notification.type === "success" ? (
+              <CheckCircle2 size={20} />
+            ) : (
+              <AlertTriangle size={20} />
+            )}
+            <span className="font-medium">{notification.message}</span>
+          </div>
+        </div>
+      )}
     </Layout>
   );
 }

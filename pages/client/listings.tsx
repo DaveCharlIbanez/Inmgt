@@ -1,7 +1,7 @@
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 import Layout from "../../components/Layout";
-import { Star, MapPin, Wifi, Wind, ChefHat, Armchair, Heart } from "lucide-react";
+import { Star, MapPin, Wifi, Wind, ChefHat, Armchair, Heart, CheckCircle2, AlertTriangle } from "lucide-react";
 
 interface Listing {
   id: number;
@@ -23,6 +23,10 @@ export default function ListingsPage() {
   const [favorites, setFavorites] = useState<number[]>([]);
   const [filterPrice, setFilterPrice] = useState(12000);
   const [loading, setLoading] = useState(true);
+  const [showReserveModal, setShowReserveModal] = useState(false);
+  const [selectedListing, setSelectedListing] = useState<Listing | null>(null);
+  const [reservationDate, setReservationDate] = useState("");
+  const [notification, setNotification] = useState<{ type: "success" | "error"; message: string } | null>(null);
 
   const loadListings = async () => {
     const mockListings: Listing[] = [
@@ -126,6 +130,51 @@ export default function ListingsPage() {
   const handleLogout = () => {
     localStorage.removeItem("user");
     router.push("/login");
+  };
+
+  const showNotification = (type: "success" | "error", message: string) => {
+    setNotification({ type, message });
+    setTimeout(() => setNotification(null), 3000);
+  };
+
+  const handleReserve = (listing: Listing) => {
+    setSelectedListing(listing);
+    setShowReserveModal(true);
+    // Set default date to tomorrow
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    setReservationDate(tomorrow.toISOString().split('T')[0]);
+  };
+
+  const confirmReservation = async () => {
+    if (!selectedListing || !reservationDate) {
+      showNotification("error", "Please select a move-in date");
+      return;
+    }
+
+    try {
+      const response = await fetch("/api/reservations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: user._id || user.id,
+          propertyName: selectedListing.name,
+          roomNumber: "TBD",
+          moveInDate: reservationDate,
+        }),
+      });
+
+      if (response.ok) {
+        showNotification("success", "Reservation successful! Admin will contact you soon.");
+        setShowReserveModal(false);
+        setSelectedListing(null);
+      } else {
+        const data = await response.json();
+        showNotification("error", data.error || "Failed to create reservation");
+      }
+    } catch (error) {
+      showNotification("error", "An error occurred. Please try again.");
+    }
   };
 
   const toggleFavorite = (id: number) => {
@@ -314,8 +363,11 @@ export default function ListingsPage() {
                       </p>
                       <p className="text-xs text-gray-500">per month</p>
                     </div>
-                    <button className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-all">
-                      View Details
+                    <button
+                      onClick={() => handleReserve(listing)}
+                      className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-all"
+                    >
+                      Reserve
                     </button>
                   </div>
                 </div>
@@ -324,6 +376,78 @@ export default function ListingsPage() {
           </div>
         </div>
       </div>
+
+      {/* Reservation Modal */}
+      {showReserveModal && selectedListing && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6 animate-slide-in">
+            <h3 className="text-xl font-bold text-gray-800 mb-4">
+              Reserve This Room
+            </h3>
+            <div className="mb-4">
+              <p className="text-gray-600 mb-2">
+                <span className="font-semibold">Property:</span> {selectedListing.name}
+              </p>
+              <p className="text-gray-600 mb-2">
+                <span className="font-semibold">Location:</span> {selectedListing.location}
+              </p>
+              <p className="text-gray-600 mb-4">
+                <span className="font-semibold">Monthly Rate:</span> {formatCurrency(selectedListing.price)}
+              </p>
+              
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Preferred Move-in Date
+              </label>
+              <input
+                type="date"
+                value={reservationDate}
+                onChange={(e) => setReservationDate(e.target.value)}
+                min={new Date().toISOString().split('T')[0]}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 text-gray-900"
+              />
+            </div>
+
+            <div className="bg-blue-50 border-l-4 border-blue-500 p-4 mb-4">
+              <p className="text-sm text-blue-800">
+                Your reservation will be submitted to the admin for review. You will be contacted shortly to confirm availability and arrange viewing.
+              </p>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setShowReserveModal(false);
+                  setSelectedListing(null);
+                }}
+                className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium transition-all"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmReservation}
+                className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-all"
+              >
+                Confirm Reservation
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Toast Notification */}
+      {notification && (
+        <div className="fixed bottom-6 right-6 z-50 animate-slide-in">
+          <div
+            className={`px-6 py-4 rounded-lg shadow-lg flex items-center gap-3 ${
+              notification.type === "success"
+                ? "bg-green-600 text-white"
+                : "bg-red-600 text-white"
+            }`}
+          >
+            <span className="font-medium">{notification.message}</span>
+          </div>
+        </div>
+      )}
     </Layout>
   );
 }

@@ -129,23 +129,23 @@ export default function ClientDashboard() {
               {featuredListings.map((item) => (
                 <div
                   key={item.id}
-                  className="flex items-center gap-4 p-4 border border-gray-200 rounded-lg hover:border-blue-300 transition-all cursor-pointer"
+                  className="flex items-start gap-4 p-4 border border-gray-200 rounded-lg hover:border-blue-300 transition-all"
                 >
-                  <div className="relative w-20 h-20 rounded-lg overflow-hidden">
+                  <div className="relative w-20 h-20 flex-shrink-0 rounded-lg overflow-hidden">
                     <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
                   </div>
-                  <div className="flex-1">
+                  <div className="flex-1 min-w-0">
                     <h4 className="font-semibold text-gray-800">{item.name}</h4>
                     <p className="text-xs text-gray-500">{item.location}</p>
-                    <p className="text-sm text-gray-600 mt-1 overflow-hidden text-ellipsis whitespace-nowrap">
+                    <p className="text-sm text-gray-600 mt-1 line-clamp-2">
                       {item.description}
                     </p>
                     <p className="text-lg font-bold text-blue-600 mt-1">
                       {formatCurrency(item.price)}/month
                     </p>
                   </div>
-                  <button className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded font-medium transition-all">
+                  <button className="flex-shrink-0 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded font-medium transition-all self-center">
                     View
                   </button>
                 </div>
@@ -182,7 +182,10 @@ export default function ClientDashboard() {
                   {user?.contactNumber || "Not provided"}
                 </p>
               </div>
-              <button className="w-full mt-4 px-4 py-2 border border-blue-600 text-blue-600 rounded-lg hover:bg-blue-50 font-medium transition-all">
+              <button
+                onClick={() => router.push("/client/profile")}
+                className="w-full mt-4 px-4 py-2 border border-blue-600 text-blue-600 rounded-lg hover:bg-blue-50 font-medium transition-all"
+              >
                 Edit Profile
               </button>
             </div>
@@ -210,7 +213,10 @@ export default function ClientDashboard() {
                   {settings?.notifications?.email ? "Enabled" : "Disabled"}
                 </p>
               </div>
-              <button className="w-full mt-4 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-all">
+              <button
+                onClick={() => router.push("/client/settings")}
+                className="w-full mt-4 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-all"
+              >
                 View All Settings
               </button>
             </div>

@@ -36,6 +36,13 @@ export default function AdminDashboard() {
       router.push("/login");
     } else {
       const parsedUser = JSON.parse(userData);
+      
+      // Redirect clients to their dashboard
+      if (parsedUser.role === "client") {
+        router.push("/client");
+        return;
+      }
+      
       setUser(parsedUser);
       fetchStats();
     }

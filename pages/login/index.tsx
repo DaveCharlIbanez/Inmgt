@@ -203,6 +203,10 @@ export default function LoginPage() {
           <p className="text-center text-xs text-gray-500 mt-4">
             Demo credentials: johnny@test.com / clientpass123
           </p>
+
+          <p className="text-center text-xs text-gray-500 mt-4">
+            Admin credentials: johnny@testadmin.com / adminpass123
+          </p>
         </div>
       </div>
     </div>
