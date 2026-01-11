@@ -9,7 +9,8 @@ interface Listing {
   location: string;
   price: number;
   rating: number;
-  image?: string;
+  image: string;
+  description: string;
   amenities: string[];
   rooms: number;
   beds: number;
@@ -20,8 +21,93 @@ export default function ListingsPage() {
   const [user, setUser] = useState<any>(null);
   const [listings, setListings] = useState<Listing[]>([]);
   const [favorites, setFavorites] = useState<number[]>([]);
-  const [filterPrice, setFilterPrice] = useState(5000);
+  const [filterPrice, setFilterPrice] = useState(12000);
   const [loading, setLoading] = useState(true);
+
+  const loadListings = async () => {
+    const mockListings: Listing[] = [
+      {
+        id: 1,
+        name: "UP Campus Dorm",
+        location: "Diliman University District",
+        price: 6500,
+        rating: 4.8,
+        image: "/images/listings/room1.jpg",
+        description:
+          "Cozy single with a bright study desk by the window, perfect for focused nights and quiet mornings.",
+        amenities: ["WiFi", "Air Conditioning", "Kitchen"],
+        rooms: 1,
+        beds: 2,
+      },
+      {
+        id: 2,
+        name: "Katipunan Study Loft",
+        location: "Katipunan, Quezon City",
+        price: 8200,
+        rating: 4.6,
+        image: "/images/listings/room2.jpg",
+        description:
+          "Dual-desk setup with generous windows, great for roommates who balance study and downtime.",
+        amenities: ["WiFi", "Air Conditioning", "Kitchen", "Parking"],
+        rooms: 2,
+        beds: 3,
+      },
+      {
+        id: 3,
+        name: "España Student Pads",
+        location: "University Belt, Manila",
+        price: 7200,
+        rating: 4.9,
+        image: "/images/listings/room3.jpg",
+        description:
+          "Spacious shared suite with ceiling fan, built-in storage, and warm lighting for late-night reviews.",
+        amenities: ["WiFi", "Air Conditioning", "Kitchen", "Parking", "Gym"],
+        rooms: 3,
+        beds: 4,
+      },
+      {
+        id: 4,
+        name: "Taft Shared Suites",
+        location: "Taft Avenue, Manila",
+        price: 9000,
+        rating: 4.7,
+        image: "/images/listings/room4.jpg",
+        description:
+          "Modern studio vibe with clean lines, accent art, and layered lighting for a calm retreat.",
+        amenities: ["WiFi", "Kitchen", "Air Conditioning", "Study Lounge"],
+        rooms: 2,
+        beds: 4,
+      },
+      {
+        id: 5,
+        name: "Baguio Cool Dorms",
+        location: "Session Road, Baguio",
+        price: 5800,
+        rating: 4.5,
+        image: "/images/listings/room5.jpg",
+        description:
+          "Airy twin setup with built-ins and mirrored closets, ready for cozy cool-season stays.",
+        amenities: ["WiFi", "Kitchen", "Parking", "Garden"],
+        rooms: 2,
+        beds: 3,
+      },
+      {
+        id: 6,
+        name: "Cebu IT Park Boarding",
+        location: "IT Park, Cebu City",
+        price: 7800,
+        rating: 4.7,
+        image: "/images/listings/room6.jpg",
+        description:
+          "Sleek single with under-bed storage, workstation, and a warm palette that pairs with city nights.",
+        amenities: ["WiFi", "Air Conditioning", "Kitchen", "Parking"],
+        rooms: 3,
+        beds: 5,
+      },
+    ];
+    setListings(mockListings);
+    setLoading(false);
+  };
 
   useEffect(() => {
     const userData = localStorage.getItem("user");
@@ -36,80 +122,6 @@ export default function ListingsPage() {
       loadListings();
     }
   }, [router]);
-
-  const loadListings = async () => {
-    const mockListings: Listing[] = [
-      {
-        id: 1,
-        name: "Cozy Downtown Suite",
-        location: "Downtown District",
-        price: 1200,
-        rating: 4.8,
-        amenities: ["WiFi", "Air Conditioning", "Kitchen"],
-        rooms: 1,
-        beds: 2,
-      },
-      {
-        id: 2,
-        name: "Modern Boarding House",
-        location: "Business Center",
-        price: 1500,
-        rating: 4.6,
-        amenities: ["WiFi", "Air Conditioning", "Kitchen", "Parking"],
-        rooms: 2,
-        beds: 3,
-      },
-      {
-        id: 3,
-        name: "Luxury Student Housing",
-        location: "University Area",
-        price: 2000,
-        rating: 4.9,
-        amenities: ["WiFi", "Air Conditioning", "Kitchen", "Parking", "Gym"],
-        rooms: 3,
-        beds: 4,
-      },
-      {
-        id: 4,
-        name: "Budget Friendly Haven",
-        location: "Residential Zone",
-        price: 900,
-        rating: 4.4,
-        amenities: ["WiFi", "Kitchen"],
-        rooms: 1,
-        beds: 2,
-      },
-      {
-        id: 5,
-        name: "Premium Penthouse",
-        location: "City Center",
-        price: 3000,
-        rating: 4.9,
-        amenities: [
-          "WiFi",
-          "Air Conditioning",
-          "Kitchen",
-          "Parking",
-          "Gym",
-          "Rooftop Lounge",
-        ],
-        rooms: 3,
-        beds: 5,
-      },
-      {
-        id: 6,
-        name: "Peaceful Suburban Home",
-        location: "Suburban District",
-        price: 1100,
-        rating: 4.7,
-        amenities: ["WiFi", "Garden", "Kitchen"],
-        rooms: 2,
-        beds: 3,
-      },
-    ];
-    setListings(mockListings);
-    setLoading(false);
-  };
 
   const handleLogout = () => {
     localStorage.removeItem("user");
@@ -128,6 +140,9 @@ export default function ListingsPage() {
     Kitchen: <ChefHat size={16} />,
     Parking: <Armchair size={16} />,
   };
+
+  const formatCurrency = (value: number) =>
+    new Intl.NumberFormat("en-PH", { style: "currency", currency: "PHP" }).format(value || 0);
 
   const filteredListings = listings.filter((l) => l.price <= filterPrice);
 
@@ -149,13 +164,13 @@ export default function ListingsPage() {
 
             <div className="mb-6">
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Max Price: ${filterPrice}
+                Max Rate: {formatCurrency(filterPrice)}
               </label>
               <input
                 type="range"
-                min="500"
-                max="5000"
-                step="100"
+                min="4000"
+                max="15000"
+                step="250"
                 value={filterPrice}
                 onChange={(e) => setFilterPrice(Number(e.target.value))}
                 className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
@@ -221,12 +236,13 @@ export default function ListingsPage() {
                 key={listing.id}
                 className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-all group"
               >
-                {/* Image Placeholder */}
-                <div className="relative bg-gradient-to-br from-blue-400 to-blue-600 h-48 flex items-center justify-center overflow-hidden">
-                  <div className="text-white text-center opacity-75">
-                    <p className="text-6xl">🏠</p>
-                    <p className="text-sm mt-2">Image placeholder</p>
-                  </div>
+                <div className="relative h-48 overflow-hidden">
+                  <img
+                    src={listing.image}
+                    alt={listing.name}
+                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/35 via-black/10 to-transparent" />
                   <button
                     onClick={() => toggleFavorite(listing.id)}
                     className="absolute top-3 right-3 p-2 bg-white rounded-full shadow-md hover:bg-gray-100 transition"
@@ -261,6 +277,10 @@ export default function ListingsPage() {
                     <span className="text-sm">{listing.location}</span>
                   </div>
 
+                  <p className="text-sm text-gray-600 mb-3 overflow-hidden text-ellipsis max-h-12 leading-6">
+                    {listing.description}
+                  </p>
+
                   <div className="flex gap-4 text-sm text-gray-600 mb-4">
                     <span className="font-medium">
                       {listing.rooms} Room{listing.rooms > 1 ? "s" : ""}
@@ -280,7 +300,7 @@ export default function ListingsPage() {
                         {amenity}
                       </span>
                     ))}
-                    {listing.amenities.length > 3 && (
+                      {listing.amenities.length > 3 && (
                       <span className="text-xs text-gray-500 px-2 py-1">
                         +{listing.amenities.length - 3} more
                       </span>
@@ -290,7 +310,7 @@ export default function ListingsPage() {
                   <div className="flex justify-between items-center pt-3 border-t">
                     <div>
                       <p className="text-2xl font-bold text-gray-800">
-                        ${listing.price}
+                        {formatCurrency(listing.price)}
                       </p>
                       <p className="text-xs text-gray-500">per month</p>
                     </div>

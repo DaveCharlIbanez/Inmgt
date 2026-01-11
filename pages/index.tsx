@@ -13,17 +13,6 @@ export default function AdminDashboard() {
   });
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const userData = localStorage.getItem("user");
-    if (!userData) {
-      router.push("/login");
-    } else {
-      const parsedUser = JSON.parse(userData);
-      setUser(parsedUser);
-      fetchStats();
-    }
-  }, [router]);
-
   const fetchStats = async () => {
     try {
       const response = await fetch("/api/users");
@@ -40,6 +29,17 @@ export default function AdminDashboard() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    const userData = localStorage.getItem("user");
+    if (!userData) {
+      router.push("/login");
+    } else {
+      const parsedUser = JSON.parse(userData);
+      setUser(parsedUser);
+      fetchStats();
+    }
+  }, [router]);
 
   const handleLogout = () => {
     localStorage.removeItem("user");

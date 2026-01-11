@@ -74,7 +74,7 @@ const ProfileSettingsSchema: Schema<IProfileSettings> = new Schema(
       },
       currency: {
         type: String,
-        default: 'USD',
+        default: 'PHP',
       },
     },
     privacy: {

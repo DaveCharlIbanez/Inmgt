@@ -2,9 +2,13 @@ import Link from "next/link";
 import React, { useState } from "react";
 import { useRouter } from "next/router";
 import { Mail, Lock, LogIn } from "lucide-react";
+import { Playfair_Display } from "next/font/google";
+
+const brandFont = Playfair_Display({ subsets: ["latin"], weight: ["600", "700"], display: "swap" });
 
 export default function LoginPage() {
   const router = useRouter();
+  const [glowPos, setGlowPos] = useState({ x: 50, y: 50 });
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -62,19 +66,59 @@ export default function LoginPage() {
     }
   };
 
+  const handleGlowMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 100;
+    const y = ((e.clientY - rect.top) / rect.height) * 100;
+    setGlowPos({ x, y });
+  };
+
+  const handleGlowLeave = () => {
+    setGlowPos({ x: 50, y: 50 });
+  };
+
   return (
     <div className="min-h-screen flex bg-gray-50">
       {/* Left Side - Branding */}
-      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-blue-600 to-purple-600 text-white p-12 flex-col justify-between">
-        <div>
-          <h1 className="text-4xl font-bold mb-2">[APP]</h1>
-          <p className="text-blue-100 text-lg">Find Your Perfect Boarding House</p>
-        </div>
-        <div>
-          <p className="text-blue-100 text-lg leading-relaxed">
-            Discover comfortable, affordable boarding houses and manage your living
-            preferences all in one place.
-          </p>
+      <div
+        className="hidden lg:flex lg:w-1/2 relative overflow-hidden text-white"
+        onMouseMove={handleGlowMove}
+        onMouseLeave={handleGlowLeave}
+      >
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-700 via-indigo-700 to-purple-700" />
+        <div
+          className="absolute inset-0 opacity-70"
+          style={{
+            backgroundImage:
+              `radial-gradient(circle at ${glowPos.x}% ${glowPos.y}%, rgba(255,255,255,0.22), transparent 34%),` +
+              "radial-gradient(circle at 20% 20%, rgba(255,255,255,0.18), transparent 32%)," +
+              "radial-gradient(circle at 80% 0%, rgba(255,255,255,0.14), transparent 30%)," +
+              "radial-gradient(circle at 50% 70%, rgba(255,255,255,0.16), transparent 38%)",
+          }}
+        />
+        <div className="absolute -right-24 -bottom-24 w-96 h-96 bg-white/15 blur-3xl rounded-full" />
+        <div className="absolute inset-8 border border-white/15 rounded-3xl backdrop-blur-sm" />
+
+        <div className="relative z-10 flex flex-col w-full h-full p-12">
+          <div className="flex-1 flex flex-col items-center justify-center text-center gap-6">
+            <span className="px-4 py-2 rounded-full border border-white/25 text-sm uppercase tracking-[0.18em] bg-white/10 backdrop-blur-sm">Student Living</span>
+            <h1 className={`${brandFont.className} text-6xl sm:text-7xl font-semibold tracking-tight drop-shadow-md`}>
+              Tuluyan
+            </h1>
+            <p className="max-w-md text-blue-50 text-lg leading-relaxed">
+              Boarding houses built for students - from move-in ready rooms to seamless monthly billing.
+            </p>
+          </div>
+          <div className="grid grid-cols-2 gap-4 text-sm text-blue-50/90">
+            <div className="p-4 rounded-2xl bg-white/10 border border-white/10 backdrop-blur-sm">
+              <p className="font-semibold">Comfort first</p>
+              <p className="text-blue-50/80">Thoughtfully managed rooms with essentials covered.</p>
+            </div>
+            <div className="p-4 rounded-2xl bg-white/10 border border-white/10 backdrop-blur-sm">
+              <p className="font-semibold">Simple management</p>
+              <p className="text-blue-50/80">One hub for payments, maintenance, and profiles.</p>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -149,7 +193,7 @@ export default function LoginPage() {
 
           <div className="mt-6 pt-6 border-t border-gray-300">
             <p className="text-center text-gray-600">
-              Don't have an account?{" "}
+              Don&apos;t have an account?{" "}
               <Link href="/signup" className="text-blue-600 hover:text-blue-700 font-bold">
                 Sign up here
               </Link>
@@ -157,7 +201,7 @@ export default function LoginPage() {
           </div>
 
           <p className="text-center text-xs text-gray-500 mt-4">
-            Demo credentials: ghost@ghost.com / password
+            Demo credentials: johnny@test.com / clientpass123
           </p>
         </div>
       </div>

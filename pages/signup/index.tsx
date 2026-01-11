@@ -85,8 +85,8 @@ export default function SignupPage() {
       {/* Left Side - Branding */}
       <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-green-600 to-emerald-600 text-white p-12 flex-col justify-between">
         <div>
-          <h1 className="text-4xl font-bold mb-2">[APP]</h1>
-          <p className="text-green-100 text-lg">Join Our Community Today</p>
+          <h1 className="text-4xl font-bold mb-2">Tuluyan</h1>
+          <p className="text-green-100 text-lg">Join the Tuluyan boarding network</p>
         </div>
         <div>
           <p className="text-green-100 text-lg leading-relaxed">

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { useState } from "react";
-import { Menu, X, Home, Users, Settings, LogOut, Building2 } from "lucide-react";
+import { Menu, X, Home, Users, Settings, LogOut, Building2, ClipboardList, CreditCard } from "lucide-react";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -18,6 +18,8 @@ export default function Layout({ children, user, onLogout }: LayoutProps) {
 
   const adminNavLinks = [
     { href: "/", label: "Dashboard", icon: Home },
+    { href: "/oversight", label: "Tenant Oversight", icon: ClipboardList },
+    { href: "/billing", label: "Billing & Invoices", icon: CreditCard },
     { href: "/users", label: "Users", icon: Users },
     { href: "/settings", label: "Settings", icon: Settings },
   ];
@@ -43,7 +45,7 @@ export default function Layout({ children, user, onLogout }: LayoutProps) {
         <div className="h-16 flex items-center justify-between px-4 border-b border-blue-400">
           {sidebarOpen && (
             <Link href="/" className="font-bold text-xl hover:text-blue-100">
-              [APP]
+              Tuluyan
             </Link>
           )}
           <button
@@ -99,6 +101,8 @@ export default function Layout({ children, user, onLogout }: LayoutProps) {
         <div className="bg-white border-b border-gray-200 px-8 py-4 flex justify-between items-center shadow-sm">
           <h1 className="text-2xl font-bold text-gray-800">
             {router.pathname === "/" && "Admin Dashboard"}
+            {router.pathname === "/oversight" && "Tenant Oversight"}
+            {router.pathname === "/billing" && "Billing & Invoices"}
             {router.pathname === "/users" && "Users Management"}
             {router.pathname === "/settings" && "Settings"}
             {router.pathname === "/client" && "Your Dashboard"}

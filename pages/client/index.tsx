@@ -9,6 +9,19 @@ export default function ClientDashboard() {
   const [settings, setSettings] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
+  const fetchSettings = async (userId: string) => {
+    try {
+      const response = await fetch(`/api/settings/home/${userId}`);
+      if (response.ok) {
+        const data = await response.json();
+        setSettings(data.data);
+      }
+      setLoading(false);
+    } catch (err) {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     const userData = localStorage.getItem("user");
     if (!userData) {
@@ -23,23 +36,43 @@ export default function ClientDashboard() {
     }
   }, [router]);
 
-  const fetchSettings = async (userId: string) => {
-    try {
-      const response = await fetch(`/api/settings/home/${userId}`);
-      if (response.ok) {
-        const data = await response.json();
-        setSettings(data.data);
-      }
-      setLoading(false);
-    } catch (err) {
-      setLoading(false);
-    }
-  };
-
   const handleLogout = () => {
     localStorage.removeItem("user");
     router.push("/login");
   };
+
+  const formatCurrency = (value: number) =>
+    new Intl.NumberFormat("en-PH", { style: "currency", currency: "PHP" }).format(value || 0);
+
+  const featuredListings = [
+    {
+      id: 1,
+      name: "UP Campus Dorm",
+      location: "Diliman University District",
+      price: 6500,
+      image: "/images/listings/room1.jpg",
+      description:
+        "Cozy single with a bright study desk by the window, perfect for focused nights and quiet mornings.",
+    },
+    {
+      id: 2,
+      name: "Katipunan Study Loft",
+      location: "Katipunan, Quezon City",
+      price: 8200,
+      image: "/images/listings/room2.jpg",
+      description:
+        "Dual-desk setup with generous windows, great for roommates who balance study and downtime.",
+    },
+    {
+      id: 3,
+      name: "Taft Shared Suites",
+      location: "Taft Avenue, Manila",
+      price: 9000,
+      image: "/images/listings/room4.jpg",
+      description:
+        "Modern studio vibe with clean lines, accent art, and layered lighting for a calm retreat.",
+    },
+  ];
 
   if (loading) {
     return (
@@ -93,23 +126,23 @@ export default function ClientDashboard() {
               Trending Properties
             </h3>
             <div className="space-y-4">
-              {[1, 2, 3].map((i) => (
+              {featuredListings.map((item) => (
                 <div
-                  key={i}
+                  key={item.id}
                   className="flex items-center gap-4 p-4 border border-gray-200 rounded-lg hover:border-blue-300 transition-all cursor-pointer"
                 >
-                  <div className="w-20 h-20 bg-gradient-to-br from-blue-400 to-purple-400 rounded-lg flex items-center justify-center text-white">
-                    🏠
+                  <div className="relative w-20 h-20 rounded-lg overflow-hidden">
+                    <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
                   </div>
                   <div className="flex-1">
-                    <h4 className="font-semibold text-gray-800">
-                      Premium Listing {i}
-                    </h4>
-                    <p className="text-sm text-gray-600">
-                      Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+                    <h4 className="font-semibold text-gray-800">{item.name}</h4>
+                    <p className="text-xs text-gray-500">{item.location}</p>
+                    <p className="text-sm text-gray-600 mt-1 overflow-hidden text-ellipsis whitespace-nowrap">
+                      {item.description}
                     </p>
                     <p className="text-lg font-bold text-blue-600 mt-1">
-                      ${1200 + i * 300}/month
+                      {formatCurrency(item.price)}/month
                     </p>
                   </div>
                   <button className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded font-medium transition-all">
