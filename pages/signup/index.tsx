@@ -1,10 +1,15 @@
 import Link from "next/link";
 import React, { useState } from "react";
 import { useRouter } from "next/router";
-import { Mail, Lock, User, Phone, UserPlus } from "lucide-react";
+import { Mail, Lock, User, Phone, UserPlus, CheckCircle2 } from "lucide-react";
+import { Playfair_Display } from "next/font/google";
+
+const brandFont = Playfair_Display({ subsets: ["latin"], weight: ["600", "700"], display: "swap" });
 
 export default function SignupPage() {
   const router = useRouter();
+  const [glowPos, setGlowPos] = useState({ x: 50, y: 50 });
+  const [showSuccess, setShowSuccess] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -71,8 +76,10 @@ export default function SignupPage() {
         throw new Error(data.error || "Failed to create account");
       }
 
-      alert("Account created successfully!");
-      router.push("/login");
+      setShowSuccess(true);
+      setTimeout(() => {
+        router.push("/login");
+      }, 2500);
     } catch (err: any) {
       setError(err.message || "An error occurred during signup");
     } finally {
@@ -80,19 +87,81 @@ export default function SignupPage() {
     }
   };
 
+  const handleGlowMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 100;
+    const y = ((e.clientY - rect.top) / rect.height) * 100;
+    setGlowPos({ x, y });
+  };
+
+  const handleGlowLeave = () => {
+    setGlowPos({ x: 50, y: 50 });
+  };
+
   return (
     <div className="min-h-screen flex bg-gray-50">
-      {/* Left Side - Branding */}
-      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-green-600 to-emerald-600 text-white p-12 flex-col justify-between">
-        <div>
-          <h1 className="text-4xl font-bold mb-2">Tuluyan</h1>
-          <p className="text-green-100 text-lg">Join the Tuluyan boarding network</p>
+      {/* Success Modal */}
+      {showSuccess && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-2xl p-8 max-w-md text-center">
+            <div className="flex justify-center mb-4">
+              <CheckCircle2 size={64} className="text-green-600" />
+            </div>
+            <h2 className="text-3xl font-bold text-gray-800 mb-2">Account Created!</h2>
+            <p className="text-gray-600 mb-6">Welcome to Tuluyan. Redirecting to login...</p>
+            <div className="w-full bg-green-200 rounded-full h-1 overflow-hidden">
+              <div className="bg-green-600 h-full animate-pulse" style={{ animation: "fill 2.5s ease-in forwards" }} />
+            </div>
+          </div>
+          <style jsx>{`
+            @keyframes fill {
+              0% { width: 0%; }
+              100% { width: 100%; }
+            }
+          `}</style>
         </div>
-        <div>
-          <p className="text-green-100 text-lg leading-relaxed">
-            Create your account and start exploring amazing boarding house options
-            tailored to your needs.
-          </p>
+      )}
+
+      {/* Left Side - Branding (matched to Login) */}
+      <div
+        className="hidden lg:flex lg:w-1/2 relative overflow-hidden text-white"
+        onMouseMove={handleGlowMove}
+        onMouseLeave={handleGlowLeave}
+      >
+        <div className="absolute inset-0 bg-gradient-to-br from-green-700 via-emerald-700 to-teal-700" />
+        <div
+          className="absolute inset-0 opacity-70"
+          style={{
+            backgroundImage:
+              `radial-gradient(circle at ${glowPos.x}% ${glowPos.y}%, rgba(255,255,255,0.22), transparent 34%),` +
+              "radial-gradient(circle at 20% 20%, rgba(255,255,255,0.18), transparent 32%)," +
+              "radial-gradient(circle at 80% 0%, rgba(255,255,255,0.14), transparent 30%)," +
+              "radial-gradient(circle at 50% 70%, rgba(255,255,255,0.16), transparent 38%)",
+          }}
+        />
+        <div className="absolute -right-24 -bottom-24 w-96 h-96 bg-white/15 blur-3xl rounded-full" />
+        <div className="absolute inset-8 border border-white/15 rounded-3xl backdrop-blur-sm" />
+
+        <div className="relative z-10 flex flex-col w-full h-full p-12">
+          <div className="flex-1 flex flex-col items-center justify-center text-center gap-6">
+            <span className="px-4 py-2 rounded-full border border-white/25 text-sm uppercase tracking-[0.18em] bg-white/10 backdrop-blur-sm">Student Living</span>
+            <h1 className={`${brandFont.className} text-6xl sm:text-7xl font-semibold tracking-tight drop-shadow-md`}>
+              Tuluyan
+            </h1>
+            <p className="max-w-md text-blue-50 text-lg leading-relaxed">
+              Create your account and join a seamless student living experience.
+            </p>
+          </div>
+          <div className="grid grid-cols-2 gap-4 text-sm text-blue-50/90">
+            <div className="p-4 rounded-2xl bg-white/10 border border-white/10 backdrop-blur-sm">
+              <p className="font-semibold">Fast onboarding</p>
+              <p className="text-blue-50/80">Sign up in minutes and get started.</p>
+            </div>
+            <div className="p-4 rounded-2xl bg-white/10 border border-white/10 backdrop-blur-sm">
+              <p className="font-semibold">All-in-one</p>
+              <p className="text-blue-50/80">Manage payments, requests, and your profile.</p>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -215,13 +284,23 @@ export default function SignupPage() {
             </button>
           </form>
 
-          <div className="mt-6 pt-6 border-t border-gray-300">
-            <p className="text-center text-gray-600">
-              Already have an account?{" "}
-              <Link href="/login" className="text-green-600 hover:text-green-700 font-bold">
-                Sign in here
-              </Link>
-            </p>
+          <div className="mt-6 space-y-4">
+            <Link href="/login">
+              <button
+                type="button"
+                className="w-full px-4 py-3 border border-green-600 text-green-600 hover:bg-green-50 font-bold rounded-lg transition-all"
+              >
+                Back to Login
+              </button>
+            </Link>
+            <div className="pt-2 border-t border-gray-300">
+              <p className="text-center text-gray-600 text-sm">
+                Already have an account?{" "}
+                <Link href="/login" className="text-green-600 hover:text-green-700 font-bold">
+                  Sign in here
+                </Link>
+              </p>
+            </div>
           </div>
         </div>
       </div>

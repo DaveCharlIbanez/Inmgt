@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { useState } from "react";
-import { Menu, X, Home, Users, Settings, LogOut, Building2, ClipboardList, CreditCard } from "lucide-react";
+import { Menu, X, Home, Users, Settings, LogOut, Building2, ClipboardList, CreditCard, Wrench, Wallet } from "lucide-react";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -28,6 +28,8 @@ export default function Layout({ children, user, onLogout }: LayoutProps) {
     { href: "/client", label: "Dashboard", icon: Home },
     { href: "/client/listings", label: "Listings", icon: Building2 },
     { href: "/client/profile", label: "Profile", icon: Users },
+    { href: "/client/service-requests", label: "Service Requests", icon: Wrench },
+    { href: "/client/wallet", label: "Wallet", icon: Wallet },
     { href: "/client/settings", label: "Settings", icon: Settings },
   ];
 
@@ -108,6 +110,8 @@ export default function Layout({ children, user, onLogout }: LayoutProps) {
             {router.pathname === "/client" && "Your Dashboard"}
             {router.pathname === "/client/listings" && "Available Listings"}
             {router.pathname === "/client/profile" && "My Profile"}
+            {router.pathname === "/client/service-requests" && "Service Requests"}
+            {router.pathname === "/client/wallet" && "My Wallet"}
             {router.pathname === "/client/settings" && "My Settings"}
           </h1>
           <div className="text-sm text-gray-500">
